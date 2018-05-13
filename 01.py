@@ -69,14 +69,15 @@ def _next_page():
     # 处理出现多页面同时观看的提示
     _deal_multi_page()
     # 处理第一个弹窗
+    _deal_first_tip()
     flag = True
     while flag:
-        _deal_first_tip()
         # 点击下一页
         bt = driver.find_element_by_css_selector('div.next-page-btn.cursor')
         bt.click()
         time.sleep(1)
         # 跳过所有提示
+
         if _judge(driver.find_element_by_class_name, 'close-btn'):
             bt = driver.find_element_by_class_name('close-btn')
             try:
@@ -85,8 +86,14 @@ def _next_page():
                 time.sleep(1)
             except:
                 pass
-        if _judge(driver.find_element_by_xpath, "//button[contains(@class,'btn-hollow')]"):
+        elif _judge(driver.find_element_by_xpath, "//button[contains(@class,'btn-hollow')]"):
             bt = driver.find_element_by_xpath("//button[contains(@class,'btn-hollow')]")
+            try:
+                bt.click()
+            except:
+                pass
+        if _judge(driver.find_element_by_xpath, "//button[@class='btn-hollow section-stat']"):
+            bt = driver.find_element_by_xpath("//button[@class='btn-hollow section-stat']")
             try:
                 bt.click()
             except:
@@ -150,7 +157,7 @@ def _run_class(course_id, chapter_id):
     # 进入课程
     driver.get(url)
     #  t()
-    _study()
+    _next_page()
 
 
 
@@ -306,7 +313,7 @@ opt = webdriver.ChromeOptions()
 # 创建chrome无界面对象
 driver = webdriver.Chrome(options=opt)
 # 设置全局显性等待
-driver.implicitly_wait(5)
+driver.implicitly_wait(2)
 
 _login('20164045033', 'dk154310')
 _run_class(COURSE_ID[0],CHAPTER_ID[0])
