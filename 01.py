@@ -65,6 +65,36 @@ def _get_chapter_schedule():
 def _add_fail_page(item):
     RETRY_LIST.append(item)
 
+
+# 处理弹窗
+def _deal_next_page_tip():
+    # if _judge(driver.find_element_by_xpath, "//button[@class='btn-hollow section-stat']"):
+    #     bt = driver.find_element_by_xpath("//button[@class='btn-hollow section-stat']")
+    #     try:
+    #         bt.click()
+    #     except:
+    #         pass
+    # time.sleep(1)
+    if _judge(driver.find_element_by_xpath, "//div[@class='stat-next']/button[@class='btn-hollow'][2]"):
+        bt = driver.find_element_by_xpath("//div[@class='stat-next']/button[@class='btn-hollow'][2]")
+        try:
+            bt.click()
+            print('消除了一个弹窗')
+        except:
+            pass
+
+# 处理其他可关闭的缩影提示
+def _deal_close_tip():
+    if _judge(driver.find_element_by_xpath, '//[contains(@class,"close-btn")]'):
+        bt = driver.find_element_by_xpath('//[contains(@class,"close-btn")]')
+        try:
+            bt.click()
+            print('---close-btn--')
+            time.sleep(1)
+        except:
+            pass
+
+
 def _next_page():
     # 处理出现多页面同时观看的提示
     _deal_multi_page()
@@ -73,31 +103,28 @@ def _next_page():
     flag = True
     while flag:
         # 点击下一页
-        bt = driver.find_element_by_css_selector('div.next-page-btn.cursor')
-        bt.click()
         time.sleep(1)
-        # 跳过所有提示
+        while _judge(driver.find_element_by_xpath, "//div[@class='stat-next']/button[@class='btn-hollow'][2]"):
+            _deal_next_page_tip()
+            time.sleep(2)
 
-        if _judge(driver.find_element_by_class_name, 'close-btn'):
-            bt = driver.find_element_by_class_name('close-btn')
-            try:
-                bt.click()
-                print('---close-btn--')
-                time.sleep(1)
-            except:
-                pass
-        elif _judge(driver.find_element_by_xpath, "//button[contains(@class,'btn-hollow')]"):
-            bt = driver.find_element_by_xpath("//button[contains(@class,'btn-hollow')]")
-            try:
-                bt.click()
-            except:
-                pass
-        if _judge(driver.find_element_by_xpath, "//button[@class='btn-hollow section-stat']"):
-            bt = driver.find_element_by_xpath("//button[@class='btn-hollow section-stat']")
-            try:
-                bt.click()
-            except:
-                pass
+        try:
+            bt = driver.find_element_by_css_selector('div.next-page-btn.cursor')
+            title = bt.find_element_by_css_selector('//div[@class="page-title"]/span').text
+            print(title)
+            bt.click()
+            print(111)
+        except:
+
+            _deal_next_page_tip()
+            bt = driver.find_element_by_css_selector('div.next-page-btn.cursor')
+            bt.click()
+            print(222)
+
+        # 跳过所有提示
+        # _deal_next_page_tip()
+        _deal_close_tip()
+
 
 
 def t():
@@ -313,7 +340,7 @@ opt = webdriver.ChromeOptions()
 # 创建chrome无界面对象
 driver = webdriver.Chrome(options=opt)
 # 设置全局显性等待
-driver.implicitly_wait(2)
+driver.implicitly_wait(1)
 
 _login('20164045033', 'dk154310')
 _run_class(COURSE_ID[0],CHAPTER_ID[0])
