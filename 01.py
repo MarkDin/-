@@ -23,6 +23,9 @@ CHAPTER_ID = [
 # 存储页面点击失败的item
 RETRY_LIST = []
 
+# 设置视频播放最大时长
+MAX_VIDEO_TIME = 30*60
+
 def _judge(methon, elem):
     flag = True
     try:
@@ -68,15 +71,14 @@ def _add_fail_page(item):
 
 # 处理弹窗
 def _deal_next_page_tip():
-    # if _judge(driver.find_element_by_xpath, "//button[@class='btn-hollow section-stat']"):
-    #     bt = driver.find_element_by_xpath("//button[@class='btn-hollow section-stat']")
-    #     try:
-    #         bt.click()
-    #     except:
-    #         pass
-    # time.sleep(1)
-    if _judge(driver.find_element_by_xpath, "//div[@class='stat-next']/button[@class='btn-hollow'][2]"):
-        bt = driver.find_element_by_xpath("//div[@class='stat-next']/button[@class='btn-hollow'][2]")
+    if _judge(driver.find_element_by_xpath, "//button[@class='btn-hollow'][2]"):
+        bt = driver.find_element_by_xpath("//button[@class='btn-hollow'][2]")
+        try:
+            bt.click()
+        except:
+            pass
+    if _judge(driver.find_element_by_xpath, "//div[@class='stat-next']/button[2]"):
+        bt = driver.find_element_by_xpath("//div[@class='stat-next']/button[2]")
         try:
             bt.click()
             print('消除了一个弹窗')
@@ -85,8 +87,8 @@ def _deal_next_page_tip():
 
 # 处理其他可关闭的缩影提示
 def _deal_close_tip():
-    if _judge(driver.find_element_by_xpath, '//[contains(@class,"close-btn")]'):
-        bt = driver.find_element_by_xpath('//[contains(@class,"close-btn")]')
+    if _judge(driver.find_element_by_xpath, '//*[contains(@class,"close-btn")]'):
+        bt = driver.find_element_by_xpath('//*[contains(@class,"close-btn")]')
         try:
             bt.click()
             print('---close-btn--')
@@ -106,20 +108,28 @@ def _next_page():
         time.sleep(1)
         while _judge(driver.find_element_by_xpath, "//div[@class='stat-next']/button[@class='btn-hollow'][2]"):
             _deal_next_page_tip()
+            print('-----------while-------')
             time.sleep(2)
-
+        # 点击下一页
         try:
+            _deal_close_tip()
+            try:
+                deal_video()
+            except:
+                pass
+
             bt = driver.find_element_by_css_selector('div.next-page-btn.cursor')
-            title = bt.find_element_by_css_selector('//div[@class="page-title"]/span').text
-            print(title)
             bt.click()
-            print(111)
         except:
 
             _deal_next_page_tip()
+            deal_video()
             bt = driver.find_element_by_css_selector('div.next-page-btn.cursor')
-            bt.click()
-            print(222)
+            try:
+                bt.click()
+            except:
+                _deal_next_page_tip()
+
 
         # 跳过所有提示
         # _deal_next_page_tip()
@@ -229,13 +239,13 @@ def _is_video_over():
         return False
 
 # 增加视频播放等待时间
-def _add_video_sleep_time(time=0):
+def _add_video_sleep_time(t=0):
     '''
     在等待计算的剩余视频时长后，判断视频是否看完，否则增加等待时间
     :return:
     '''
     # 尝试3次增加等待时间
-    if time == 3:
+    if t == 3:
         print('此节视频播放出现问题，跳过进入下一小节')
 
     if _is_video_over():
@@ -243,8 +253,8 @@ def _add_video_sleep_time(time=0):
         return True
     else:
         time.sleep(10)
-        time += 1
-        _add_video_sleep_time(time)
+        t += 1
+        _add_video_sleep_time(t)
 
 
 # 获取并计算视频播放耗费的时间
@@ -258,13 +268,61 @@ def _calculate_video_time():
             WebDriverWait(driver, 30).until(EC.visibility_of_element_located(
                 (By.CSS_SELECTOR, '.jwcontrolbar  > span.jwgroup.jwright > span')))
             text = driver.find_element_by_css_selector('.jwcontrolbar  > span.jwgroup.jwright > span').text
+            percent = driver.find_element_by_css_selector('div.video-progress.clearfix.not-start > div.text >span:nth-child(2)').text
+
+            percent = float(percent) // 100
+            print('剩余百分比:', percent,'%')
         except:
             pass
-    a, b = text.split(':')
+        print(text)
+    try:
+        a, b = str(text).split(':')
+    except:
+        pass
+    t = 0
     t = int(a) * 60 + int(b)
+    t = t * (1 - percent)
     print('视频播放还剩大约', t, '秒')
     return t+2
 
+def deal_video():
+    t1 = time.time()
+    if _is_video_page():
+        print('视频页面')
+        # 点击播放按钮
+        driver.find_element_by_css_selector('.jwdisplayIcon .jwicon').click()
+        if _is_video_over():
+            pass
+        else:
+            print('没看完')
+            _new_video_play()
+            if _is_video_over():
+                print('已看完')
+            # 计算视频播放时间
+            # sleep_time = _calculate_video_time()
+            # t = 10
+            # total = 0
+            # while not _is_video_over():
+            #     time.sleep(t)
+            #     total += t
+            #     if total >= sleep_time:
+            #         break
+            # # 最后再判断视频是否看完，没有就增加等待时间
+            # _add_video_sleep_time()
+    else:
+        print('非视频页面')
+    t2 = time.time()
+    print('耗时：', t2 - t1)
+
+
+# 处理视频没看完却暂停
+def deal_pause():
+    pass
+
+# 采用等待元素出现的方式来处理视频播放时长
+def _new_video_play():
+    WebDriverWait(driver, MAX_VIDEO_TIME).until(EC.text_to_be_present_in_element(
+        (By.CSS_SELECTOR, 'div.video-progress.clearfix.complete > div.text >span'), u'已看完'))
 
 def _study():
     # 处理出现多页面同时观看的提示
@@ -342,6 +400,6 @@ driver = webdriver.Chrome(options=opt)
 # 设置全局显性等待
 driver.implicitly_wait(1)
 
-_login('20164045033', 'dk154310')
+_login('20164042023', '20164042023a')
 _run_class(COURSE_ID[0],CHAPTER_ID[0])
 
