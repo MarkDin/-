@@ -68,7 +68,7 @@ sip==4.19.6
 six==1.11.0
 traitlets==4.3.2
 Twisted==17.9.0
-urllib3==1.22
+urllib3==1.26.5
 w3lib==1.19.0
 wcwidth==0.1.7
 wget==3.2
