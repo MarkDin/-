@@ -32,7 +32,7 @@ matplotlib==2.2.2
 mccabe==0.6.1
 mysql-connector==2.1.6
 numpy==1.14.2
-opencv-python==3.4.0.12
+opencv-python==4.2.0.32
 pandas==0.22.0
 parsel==1.4.0
 parso==0.1.0
