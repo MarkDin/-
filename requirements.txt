@@ -59,7 +59,7 @@ pytz==2018.4
 queuelib==1.5.0
 requests==2.18.4
 scipy==1.0.1
-Scrapy==1.5.0
+Scrapy==2.6.1
 seaborn==0.8.1
 selenium==3.11.0
 service-identity==17.0.0
