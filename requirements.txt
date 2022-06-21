@@ -31,7 +31,7 @@ macholib==1.9
 matplotlib==2.2.2
 mccabe==0.6.1
 mysql-connector==2.1.6
-numpy==1.14.2
+numpy==1.22.0
 opencv-python==3.4.0.12
 pandas==0.22.0
 parsel==1.4.0
